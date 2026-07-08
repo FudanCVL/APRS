@@ -3,7 +3,7 @@ name = "aprs"
 version = "1.0.0"
 description = "Active Panoramic Referring Segmentation - A benchmark for active perception in 360° environments with vision-language agents"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11,<3.13"
 license = {text = "MIT"}
 authors = [
     {name = "Song Tang", email = "tangsong322@gmail.com"},
@@ -51,6 +51,7 @@ dependencies = [
     "tqdm>=4.65",
     "openai>=1.0",
     "huggingface_hub>=0.16",
+    "setuptools>=68.0.0,<72.0.0",
 ]
 
 [project.optional-dependencies]
