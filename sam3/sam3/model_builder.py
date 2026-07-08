@@ -2,7 +2,6 @@
 
 # pyre-unsafe
 
-import os
 from typing import Optional
 
 import pkg_resources
@@ -10,6 +9,8 @@ import torch
 import torch.nn as nn
 from huggingface_hub import hf_hub_download
 from iopath.common.file_io import g_pathmgr
+
+from sam3.model import sam3_camera_predictor
 from sam3.model.decoder import (
     DecoupledTransformerDecoderLayerv2,
     SimpleRoPEAttention,
@@ -29,10 +30,12 @@ from sam3.model.memory import (
     SimpleMaskEncoder,
 )
 from sam3.model.model_misc import (
-    DotProductScoring,
     MLP,
-    MultiheadAttentionWrapper as MultiheadAttention,
+    DotProductScoring,
     TransformerWrapper,
+)
+from sam3.model.model_misc import (
+    MultiheadAttentionWrapper as MultiheadAttention,
 )
 from sam3.model.multiplex_utils import MultiplexController
 from sam3.model.necks import Sam3DualViTDetNeck, Sam3TriViTDetNeck
@@ -44,7 +47,6 @@ from sam3.model.sam3_video_inference import Sam3VideoInferenceWithInstanceIntera
 from sam3.model.sam3_video_predictor import Sam3VideoPredictorMultiGPU
 from sam3.model.text_encoder_ve import VETextEncoder
 from sam3.model.tokenizer_ve import SimpleTokenizer
-from sam3.model.video_tracking_multiplex import VideoTrackingDynamicMultiplex
 from sam3.model.vitdet import ViT
 from sam3.model.vl_combiner import SAM3VLBackbone, SAM3VLBackboneTri, TriHeadVisionOnly
 from sam3.sam.transformer import RoPEAttention
@@ -1316,3 +1318,117 @@ def build_sam3_predictor(
         )
     else:
         raise ValueError(f"Unknown version: {version!r}. Use 'sam3' or 'sam3.1'.")
+
+def build_sam3_camera_predictor(
+    checkpoint_path: str,
+    mode: str = "eval",
+    apply_temporal_disambiguation: bool = True,
+    with_backbone: bool = True,
+    compile_mode=None,
+    device: str = "cuda" if torch.cuda.is_available() else "cpu",
+) -> sam3_camera_predictor.Sam3TrackerPredictor:
+    """
+    Build SAM3 camera predictor for real-time camera tracking scenarios.
+
+    This is a specialized version of Sam3TrackerPredictor designed for camera-based
+    tracking with potential camera-specific optimizations and features.
+
+    Args:
+        checkpoint_path: Path to model checkpoint file
+        mode: Model mode - 'eval' for inference, 'train' for training
+        apply_temporal_disambiguation: Whether to apply temporal disambiguation
+            to improve tracking consistency across frames
+        with_backbone: Whether to include vision backbone for feature extraction.
+            Set to True for camera scenarios where features need to be computed per frame.
+        compile_mode: PyTorch compilation mode (e.g., 'default') for optimization.
+            None disables compilation.
+        device: Device to load the model on ('cuda' or 'cpu')
+
+    Returns:
+        Sam3TrackerPredictor: The instantiated camera predictor model with loaded weights
+
+    Note:
+        This function is separate from build_tracker() to allow camera-specific
+        customizations without affecting the base tracker functionality.
+    """
+    maskmem_backbone = _create_tracker_maskmem_backbone()
+    transformer = _create_tracker_transformer()
+    backbone = None
+    if with_backbone:
+        vision_backbone = _create_vision_backbone(compile_mode=compile_mode)
+        backbone = SAM3VLBackbone(scalp=1, visual=vision_backbone, text=None)
+    # Create the Tracker module
+    model = sam3_camera_predictor.Sam3TrackerPredictor(
+        image_size=1008,
+        num_maskmem=7,
+        backbone=backbone,
+        backbone_stride=14,
+        transformer=transformer,
+        maskmem_backbone=maskmem_backbone,
+        # SAM parameters
+        multimask_output_in_sam=True,
+        # Evaluation
+        forward_backbone_per_frame_for_eval=True,
+        trim_past_non_cond_mem_for_eval=False,
+        # Multimask
+        multimask_output_for_tracking=True,
+        multimask_min_pt_num=0,
+        multimask_max_pt_num=1,
+        # Additional settings
+        always_start_from_first_ann_frame=False,
+        # Mask overlap
+        non_overlap_masks_for_mem_enc=False,
+        non_overlap_masks_for_output=False,
+        max_cond_frames_in_attn=4,
+        offload_output_to_cpu_for_eval=False,
+        # SAM decoder settings
+        sam_mask_decoder_extra_args={
+            "dynamic_multimask_via_stability": True,
+            "dynamic_multimask_stability_delta": 0.05,
+            "dynamic_multimask_stability_thresh": 0.98,
+        },
+        clear_non_cond_mem_around_input=True,
+        fill_hole_area=0,
+        use_memory_selection=apply_temporal_disambiguation,
+    )
+
+    # Load checkpoint (extract tracker weights from video model checkpoint)
+    with g_pathmgr.open(checkpoint_path, "rb") as f:
+        ckpt = torch.load(f, map_location="cpu", weights_only=True)
+    if "model" in ckpt and isinstance(ckpt["model"], dict):
+        ckpt = ckpt["model"]
+
+    # Extract tracker weights
+    tracker_ckpt = {
+        k.replace("tracker.", ""): v
+        for k, v in ckpt.items()
+        if k.startswith("tracker.")
+    }
+
+    # If with_backbone, also load detector's vision backbone weights
+    # (excluding language_backbone since camera predictor doesn't use text)
+    if with_backbone:
+        backbone_ckpt = {
+            k.replace("detector.", ""): v
+            for k, v in ckpt.items()
+            if k.startswith("detector.backbone.vision_backbone.")
+        }
+        tracker_ckpt.update(backbone_ckpt)
+        print(f"Loading {len(backbone_ckpt)} vision backbone parameters from detector")
+
+    missing_keys, unexpected_keys = model.load_state_dict(tracker_ckpt, strict=False)
+    if missing_keys:
+        print(f"Missing keys when loading tracker: {missing_keys}")
+    if unexpected_keys:
+        print(f"Unexpected keys when loading tracker: {unexpected_keys}")
+
+    # Setup device and mode
+    model = model.to(device)
+    if mode == "eval":
+        model.eval()
+    elif mode == "train":
+        model.train()
+    else:
+        raise ValueError(f"Invalid mode: {mode}. Expected 'eval' or 'train'")
+
+    return model
