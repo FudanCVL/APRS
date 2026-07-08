@@ -52,6 +52,8 @@ dependencies = [
     "openai>=1.0",
     "huggingface_hub>=0.16",
     "setuptools>=68.0.0,<72.0.0",
+    "iopath>=0.1.10",
+    "psutil>=7.2.2",
 ]
 
 [project.optional-dependencies]
