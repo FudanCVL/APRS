@@ -1,0 +1,158 @@
+<div align="center">
+
+# Seek to Segment: Active Perception for Panoramic Referring Segmentation
+
+**[Song Tang](https://github.com/tangsong322)<sup>1</sup>, [Shuming Hu](https://github.com/hsmcs)<sup>1</sup>, [Xincheng Shuai](https://github.com/shuaixincheng)<sup>1</sup>, [Henghui Ding](https://henghuiding.com/)<sup>1†</sup>, [Yu-Gang Jiang](https://scholar.google.com/citations?user=f3_FP8AAAAAJ)<sup>2†</sup>**
+
+<sup>1</sup>Institute of Big Data, College of Computer Science and Artificial Intelligence, Fudan University
+<sup>2</sup>Institute of Trustworthy Embodied AI, Fudan University
+
+<sup>†</sup>Corresponding authors
+
+[![arXiv](https://img.shields.io/badge/arXiv-2607.02497-b31b1b.svg)](https://arxiv.org/abs/2607.02497v1)
+[![Project Page](https://img.shields.io/badge/Project-Page-green)](https://henghuiding.com/APRS/)
+[![Dataset](https://img.shields.io/badge/Dataset-HuggingFace-yellow)](https://huggingface.co/datasets/APRS)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+</div>
+
+---
+
+## 📖 Overview
+
+We introduce **Active Panoramic Referring Segmentation (APRS)**, a novel task that requires agents to **actively explore** continuous 360° environments to seek and segment targets based on language instructions. Unlike passive referring segmentation methods that process static images, APRS agents must:
+
+- 🔍 **Actively adjust viewing direction** (Δθ, Δφ) to explore panoramic scenes
+- 🧠 **Reason about spatial relationships** across multiple viewpoints
+- 🎯 **Locate and segment targets** specified by natural language instructions
+- 💾 **Maintain spatial memory** to avoid redundant exploration
+
+<div align="center">
+  <img src="assets/task.png" width="90%">
+  <p><i>Figure 1: APRS requires agents to actively explore 360° environments to find and segment targets based on language instructions.</i></p>
+</div>
+
+---
+
+## 🌟 Key Features
+
+- **Large-scale Benchmark**: 7,420 samples across 4,971 diverse indoor/outdoor panoramic scenes
+- **Rich Spatial Language**: Four types of spatial referring expressions (Egocentric, Unique-Attribute, Allocentric, Multi-hop)
+- **PanoSeeker Agent**: Vision-Language agent with EgoSphere spatial memory for efficient exploration
+- **Training Pipeline**: Supervised Fine-Tuning on expert trajectories + Reinforcement Learning optimization
+- **Comprehensive Evaluation**: Success Rate, Exploration Efficiency (SPL), and Segmentation Quality (mIoU)
+
+---
+
+## 🏗️ Method: PanoSeeker
+
+**PanoSeeker** is a memory-augmented Vision-Language agent designed for efficient active perception in 360° environments.
+
+### Core Components
+
+**1. EgoSphere Memory**
+Explicit spatial-visual memory that progressively maps sequential observations into a unified 360° panoramic canvas:
+- Numbered markers showing visited viewpoints
+- Dark/black regions indicating unexplored areas
+- 30° latitude-longitude grid for precise angular estimation
+- Red crosshair showing current viewing direction
+
+**2. Intelligent Search Strategy**
+- Semantic reasoning for object category constraints (ground objects vs ceiling objects)
+- Visual context extraction from anchor objects and spatial relations
+- Probability-guided decision making to prioritize high-likelihood unexplored regions
+- Efficient movement planning with adaptive step sizes (120°/90°/60°/30°)
+
+**3. Training Pipeline**
+- **Supervised Fine-Tuning (SFT)**: Learn from expert-annotated search trajectories with memory timelines
+- **Reinforcement Learning (RL)**: GRPO-based optimization with efficiency and terminal rewards
+- **Active Alignment**: SAM-3 based viewpoint centering and segmentation
+
+<div align="center">
+  <img src="assets/method.png" width="90%">
+  <p><i>Figure 2: PanoSeeker framework with EgoSphere memory and RL-based optimization.</i></p>
+</div>
+
+---
+
+## 📦 Installation
+
+### Requirements
+- Python >= 3.8
+- PyTorch >= 2.0 (for SAM-3 segmentation)
+- CUDA (recommended for GPU acceleration)
+
+### Basic Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/FudanCVL/APRS.git
+cd APRS
+
+# Install core dependencies
+pip install -e .
+
+# Optional: Install SAM-3 for segmentation
+pip install -e ".[sam3]"
+
+# Optional: Install 360° viewer
+pip install -e ".[viewer]"
+```
+
+---
+
+## 🚀 Usage
+
+### Visualize Panoramas
+
+```bash
+# Launch interactive 360° viewer
+python tools/viewer_360.py --root APRS_dataset --split test --index 0
+
+# View standalone panorama
+python tools/viewer_360.py path/to/panorama.jpg
+```
+
+**Controls**: Drag mouse / WASD / Arrow keys · R to reset
+
+---
+
+## 📝 Citation
+
+If you find this work helpful, please consider citing:
+
+```bibtex
+@article{tang2026seek,
+  title={Seek to Segment: Active Perception for Panoramic Referring Segmentation},
+  author={Tang, Song and Hu, Shuming and Shuai, Xincheng and Ding, Henghui and Jiang, Yu-Gang},
+  journal={arXiv preprint arXiv:2607.02497},
+  year={2025}
+}
+```
+
+---
+
+## 📄 License
+
+This project is released under the [MIT License](LICENSE).
+
+---
+
+## 🙏 Acknowledgements
+
+- [Qwen3-VL](https://github.com/qwenlm/qwen3-vl) for vision-language model backbone
+- [SAM-3](https://github.com/facebookresearch/segment-anything-3) for segmentation
+
+
+---
+
+## 🔗 Links
+
+- **Project Page**: [https://henghuiding.com/APRS/](https://henghuiding.com/APRS/)
+- **Paper**: [arXiv:2607.02497](https://arxiv.org/abs/2607.02497v1)
+
+---
+
+<div align="center">
+  <p>⭐ Star us on GitHub if you find this project helpful! ⭐</p>
+</div>
