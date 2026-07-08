@@ -2,7 +2,7 @@
 
 # Seek to Segment: Active Perception for Panoramic Referring Segmentation
 
-**[Song Tang](https://github.com/tangsong322)<sup>1</sup>, [Shuming Hu](https://github.com/hsmcs)<sup>1</sup>, [Xincheng Shuai](https://github.com/shuaixincheng)<sup>1</sup>, [Henghui Ding](https://henghuiding.com/)<sup>1†</sup>, [Yu-Gang Jiang](https://scholar.google.com/citations?user=f3_FP8AAAAAJ)<sup>2†</sup>**
+**[Song Tang](https://github.com/songtang209)<sup>1</sup>, [Shuming Hu](https://github.com/Hushuming727)<sup>1</sup>, [Xincheng Shuai](https://github.com/xinchengshuai)<sup>1</sup>, [Henghui Ding](https://henghuiding.com/)<sup>1†</sup>, [Yu-Gang Jiang](https://scholar.google.com/citations?user=f3_FP8AAAAAJ)<sup>2†</sup>**
 
 <sup>1</sup>Institute of Big Data, College of Computer Science and Artificial Intelligence, Fudan University
 <sup>2</sup>Institute of Trustworthy Embodied AI, Fudan University
