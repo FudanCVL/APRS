@@ -252,6 +252,7 @@ def main():
     ap.add_argument("--root",  default=None, help="APRS dataset root (loads a sample instead)")
     ap.add_argument("--hf", action="store_true", help="Load from HuggingFace dataset")
     ap.add_argument("--repo-id", default="FudanCVL/APRS_dataset", help="HuggingFace repository ID")
+    ap.add_argument("--token", default=None, help="HuggingFace token (or set HF_TOKEN env var)")
     ap.add_argument("--split", default="test", choices=["train", "test"])
     ap.add_argument("--index", type=int, default=0, help="sample index")
     args = ap.parse_args()
@@ -264,7 +265,7 @@ def main():
         from aprs import APRSDataset
 
         print(f"Loading from HuggingFace: {args.repo_id} (split={args.split}, index={args.index})...")
-        dataset = APRSDataset.from_hub(repo_id=args.repo_id, split=args.split)
+        dataset = APRSDataset.from_hub(repo_id=args.repo_id, split=args.split, token=args.token)
 
         if args.index >= len(dataset):
             print(f"Error: Index {args.index} out of range (dataset has {len(dataset)} samples)")
