@@ -109,10 +109,21 @@ class APRSDataset:
             parquet = parquet_data
 
         if parquet:
-            from datasets import load_dataset
-            hf = load_dataset("parquet", data_files={split: parquet}, split=split)
-            self._hf = hf
-            self.samples = [self._sample_from_hf(i, r) for i, r in enumerate(hf)]
+            try:
+                # Try using pyarrow directly to avoid LocalFileSystem caching issues
+                from datasets import Dataset
+                import pyarrow.parquet as pq
+
+                table = pq.read_table(parquet)
+                hf = Dataset(table)
+                self._hf = hf
+                self.samples = [self._sample_from_hf(i, r) for i, r in enumerate(hf)]
+            except Exception as e:
+                # Fallback to load_dataset if pyarrow fails
+                from datasets import load_dataset
+                hf = load_dataset("parquet", data_files={split: parquet}, split=split)
+                self._hf = hf
+                self.samples = [self._sample_from_hf(i, r) for i, r in enumerate(hf)]
         elif os.path.exists(jsonl):
             self.samples = list(self._iter_jsonl(jsonl, split, image_dir))
         elif os.path.exists(meta_jsonl):
