@@ -177,9 +177,9 @@ class GLViewer(QOpenGLWidget):
 
     def keyPressEvent(self, e):
         k = e.key()
-        if k in (QtCore.Qt.Key_A, QtCore.Qt.Key_Left):
+        if k in (QtCore.Qt.Key_A, QtCore.Qt.Key_Right):
             self.nudge(LOOK_STEP, 0)
-        elif k in (QtCore.Qt.Key_D, QtCore.Qt.Key_Right):
+        elif k in (QtCore.Qt.Key_D, QtCore.Qt.Key_Left):
             self.nudge(-LOOK_STEP, 0)
         elif k in (QtCore.Qt.Key_W, QtCore.Qt.Key_Up):
             self.nudge(0, LOOK_STEP)
