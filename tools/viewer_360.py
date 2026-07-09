@@ -1,5 +1,6 @@
 """Minimal interactive 360° panorama viewer for APRS.
     python tools/viewer_360.py --root APRS_dataset --split test --index 0
+    python tools/viewer_360.py --hf --split test --index 0
     python tools/viewer_360.py path/to/panorama.jpg
 """
 import argparse
@@ -7,6 +8,7 @@ import math
 import os
 import sys
 
+import numpy as np
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from PIL import Image
@@ -60,11 +62,26 @@ class GLViewer(QOpenGLWidget):
         self._update_projection()
 
     def _load_texture(self, path):
-        if not path or not os.path.exists(path):
-            print(f"Panorama not found: {path}")
+        if not path:
+            print("No panorama path provided")
             return
         try:
-            img = Image.open(path).convert("RGBA").transpose(Image.FLIP_LEFT_RIGHT)
+            # Support file paths, PIL Image, and numpy arrays
+            if isinstance(path, np.ndarray):
+                # Convert BGR (OpenCV) to RGB, then to PIL
+                if path.shape[2] == 3:
+                    rgb = path[:, :, ::-1]  # BGR -> RGB
+                    img = Image.fromarray(rgb).convert("RGBA").transpose(Image.FLIP_LEFT_RIGHT)
+                else:
+                    img = Image.fromarray(path).convert("RGBA").transpose(Image.FLIP_LEFT_RIGHT)
+            elif isinstance(path, Image.Image):
+                img = path.convert("RGBA").transpose(Image.FLIP_LEFT_RIGHT)
+            elif os.path.exists(path):
+                img = Image.open(path).convert("RGBA").transpose(Image.FLIP_LEFT_RIGHT)
+            else:
+                print(f"Panorama not found: {path}")
+                return
+
             ix, iy = img.size
             data = img.tobytes("raw", "RGBA", 0, 1)
             self.texture_id = glGenTextures(1)
@@ -232,14 +249,38 @@ def box_to_angular(box_norm):
 def main():
     ap = argparse.ArgumentParser(description="Minimal APRS 360° panorama viewer")
     ap.add_argument("image", nargs="?", help="panorama image path (image-only mode)")
-    ap.add_argument("--root",  default="APRS_dataset",help="APRS dataset root (loads a sample instead)")
+    ap.add_argument("--root",  default=None, help="APRS dataset root (loads a sample instead)")
+    ap.add_argument("--hf", action="store_true", help="Load from HuggingFace dataset")
+    ap.add_argument("--repo-id", default="FudanCVL/APRS_dataset", help="HuggingFace repository ID")
     ap.add_argument("--split", default="test", choices=["train", "test"])
     ap.add_argument("--index", type=int, default=0, help="sample index")
     args = ap.parse_args()
 
     image_path, box, init_yaw, init_pitch, title = args.image, None, 0.0, 0.0, ""
 
-    if args.root:
+    if args.hf:
+        # Load from HuggingFace using APRSDataset.from_hub()
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        from aprs import APRSDataset
+
+        print(f"Loading from HuggingFace: {args.repo_id} (split={args.split}, index={args.index})...")
+        dataset = APRSDataset.from_hub(repo_id=args.repo_id, split=args.split)
+
+        if args.index >= len(dataset):
+            print(f"Error: Index {args.index} out of range (dataset has {len(dataset)} samples)")
+            sys.exit(1)
+
+        sample = dataset[args.index]
+
+        # Use preloaded image from HuggingFace (numpy array in BGR format)
+        image_path = sample.load_image()  # Returns BGR numpy array
+        box = box_to_angular(sample.box_norm)
+        init_yaw, init_pitch = sample.init_theta, sample.init_phi
+        title = f"[{sample.category}] {sample.instruction}"
+        print(title)
+
+    elif args.root:
+        # Load from local dataset
         sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         from aprs import APRSDataset
         sample = APRSDataset(args.root, split=args.split)[args.index]
@@ -249,7 +290,7 @@ def main():
         title = f"[{sample.category}] {sample.instruction}"
         print(title)
     elif not image_path:
-        ap.error("provide an image path, or --root to load a dataset sample")
+        ap.error("provide an image path, --root for local dataset, or --hf for HuggingFace dataset")
 
     app = QtWidgets.QApplication(sys.argv)
     win = MainWindow(image_path, box=box, init_yaw=init_yaw,

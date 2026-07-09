@@ -160,16 +160,47 @@ pip install -e ".[all]"        # All components
 
 ## 🚀 Usage
 
+### Download Dataset
+
+**Option 1: Download from HuggingFace Hub**
+
+```python
+from aprs import APRSDataset
+
+# Load dataset directly from HuggingFace
+dataset = APRSDataset.from_hub(repo_id="FudanCVL/APRS_dataset", split="train")
+sample = dataset[0]
+
+# Access sample data
+print(sample.instruction)       # Language instruction
+print(sample.category)          # Spatial type: EGO/ALLO/UNIQ/MULTIHOP
+print(sample.init_theta)        # Initial viewing direction (yaw)
+print(sample.init_phi)          # Initial viewing direction (pitch)
+image = sample.load_image()     # Load panoramic image (BGR numpy array)
+```
+
+**Option 2: Download dataset manually**
+
+```bash
+# Download from HuggingFace (requires git-lfs)
+git lfs install
+git clone https://huggingface.co/datasets/FudanCVL/APRS_dataset APRS_dataset
+```
+
 ### Visualize Panoramas
 
 ```bash
-# Launch interactive 360° viewer
+# Launch interactive 360° viewer with HuggingFace dataset
+uv run python tools/viewer_360.py --hf --split test --index 0
+
+# Or load from local dataset
 uv run python tools/viewer_360.py --root APRS_dataset --split test --index 0
 
 # View standalone panorama
 uv run python tools/viewer_360.py path/to/panorama.jpg
 
 # Or use the installed command
+aprs-viewer --hf --split test --index 0
 aprs-viewer --root APRS_dataset --split test --index 0
 ```
 
