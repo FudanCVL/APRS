@@ -164,10 +164,13 @@ pip install -e ".[all]"        # All components
 
 ```bash
 # Launch interactive 360° viewer
-python tools/viewer_360.py --root APRS_dataset --split test --index 0
+uv run python tools/viewer_360.py --root APRS_dataset --split test --index 0
 
 # View standalone panorama
-python tools/viewer_360.py path/to/panorama.jpg
+uv run python tools/viewer_360.py path/to/panorama.jpg
+
+# Or use the installed command
+aprs-viewer --root APRS_dataset --split test --index 0
 ```
 
 **Controls**: Drag mouse / WASD / Arrow keys · R to reset
@@ -197,8 +200,14 @@ This project is released under the [MIT License](LICENSE).
 
 ## 🙏 Acknowledgements
 
+**Models:**
 - [Qwen3-VL](https://github.com/qwenlm/qwen3-vl) for vision-language model backbone
 - [SAM-3](https://github.com/facebookresearch/segment-anything-3) for segmentation
+
+**Datasets:**
+- [SUN360](https://3dvision.princeton.edu/projects/2012/SUN360/) for panoramic scene understanding
+- [PANDORA](https://github.com/tdsuper/SphericalObjectDetection) for 360° object detection dataset
+- [360-Dataset](https://aliensunmin.github.io/project/360-dataset/) for panoramic vision datasets
 
 
 ---
