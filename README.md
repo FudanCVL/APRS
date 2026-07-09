@@ -223,6 +223,12 @@ If you find this work helpful, please consider citing:
 
 ---
 
+## 📧 Contact
+
+**Song Tang** (tangsong322@gmail.com), **Henghui Ding** (henghuiding@gmail.com)
+
+---
+
 ## 📄 License
 
 This project is released under the [MIT License](LICENSE).

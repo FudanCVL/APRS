@@ -94,12 +94,21 @@ class APRSDataset:
 
 
     def _load_local(self, root: str, split: str) -> None:
-        parquet = os.path.join(root, "data", "benchmark", f"{split}.parquet")
+        parquet_benchmark = os.path.join(root, "data", "benchmark", f"{split}.parquet")
+        parquet_data = os.path.join(root, "data", f"{split}.parquet")
         jsonl = os.path.join(root, f"{split}.jsonl")
         meta_jsonl = os.path.join(root, "metadata", f"{split}.jsonl")
         csv_path = os.path.join(root, f"{split}.csv")
         image_dir = os.path.join(root, split)
-        if os.path.exists(parquet):
+
+        # Try multiple parquet locations (for different dataset structures)
+        parquet = None
+        if os.path.exists(parquet_benchmark):
+            parquet = parquet_benchmark
+        elif os.path.exists(parquet_data):
+            parquet = parquet_data
+
+        if parquet:
             from datasets import load_dataset
             hf = load_dataset("parquet", data_files={split: parquet}, split=split)
             self._hf = hf
@@ -222,6 +231,14 @@ class APRSDataset:
         box_w = float(r.get("Box_W_Norm") or r.get("box_w") or 0.0)
         box_h = float(r.get("Box_H_Norm") or r.get("box_h") or 0.0)
 
+        # Handle image_path: convert relative path to absolute if root is set
+        image_path = None
+        if self.root:
+            rel_path = r.get("image_path")
+            if rel_path:
+                # image_path in parquet is like "test/filename.jpg"
+                image_path = os.path.join(self.root, rel_path)
+
         return APRSSample(
             id=r.get("id", f"{self.split}_{i}"),
             split=self.split,
@@ -236,6 +253,7 @@ class APRSDataset:
             target_theta=target_theta,
             target_phi=target_phi,
             box_norm=(box_x, box_y, box_w, box_h),
+            image_path=image_path,
             _image=img,
         )
 
