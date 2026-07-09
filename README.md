@@ -11,7 +11,7 @@
 
 [![arXiv](https://img.shields.io/badge/arXiv-2607.02497-b31b1b.svg)](https://arxiv.org/abs/2607.02497v1)
 [![Project Page](https://img.shields.io/badge/Project-Page-green)](https://henghuiding.com/APRS/)
-[![Dataset](https://img.shields.io/badge/Dataset-HuggingFace-yellow)](https://huggingface.co/datasets/APRS)
+[![Dataset](https://img.shields.io/badge/Dataset-HuggingFace-yellow)](https://huggingface.co/datasets/FudanCVL/APRS_dataset)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 </div>
