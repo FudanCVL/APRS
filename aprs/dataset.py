@@ -167,10 +167,15 @@ class APRSDataset:
         return cls._from_hf(hf, split)
 
     @classmethod
-    def from_hub(cls, repo_id: str, split: str = "train",
-                 config: str = "benchmark") -> "APRSDataset":
+    def from_hub(cls, repo_id: str = "FudanCVL/APRS_dataset",
+                 split: str = "train") -> "APRSDataset":
         from datasets import load_dataset
-        hf = load_dataset(repo_id, name=config, split=split)
+        # Load from HuggingFace Hub - the parquet files are in data/ directory
+        hf = load_dataset(
+            repo_id,
+            data_files={split: f"data/{split}.parquet"},
+            split=split
+        )
         return cls._from_hf(hf, split)
 
     @classmethod
@@ -186,19 +191,40 @@ class APRSDataset:
         if pil is not None and not isinstance(pil, (str, bytes)):
             # PIL.Image -> BGR ndarray (lazy: only when iterating rows)
             img = cv2.cvtColor(np.array(pil.convert("RGB")), cv2.COLOR_RGB2BGR)
+
+        # Support both new CSV column names and standard field names
+        filename = r.get("Filename") or r.get("filename") or r.get("id", f"{self.split}_{i}")
+        instruction = r.get("Description") or r.get("instruction") or ""
+        instruction_zh = r.get("instruction_zh") or ""
+        category = r.get("Category") or r.get("category") or ""
+
+        img_w = int(r.get("Img_W") or r.get("width") or 0)
+        img_h = int(r.get("Img_H") or r.get("height") or 0)
+
+        init_theta = float(r.get("Pt_Theta") or r.get("init_theta") or 0.0)
+        init_phi = float(r.get("Pt_Phi") or r.get("init_phi") or 0.0)
+        target_theta = float(r.get("Box_Theta") or r.get("target_theta") or 0.0)
+        target_phi = float(r.get("Box_Phi") or r.get("target_phi") or 0.0)
+
+        box_x = float(r.get("Box_X_Norm") or r.get("box_x") or 0.0)
+        box_y = float(r.get("Box_Y_Norm") or r.get("box_y") or 0.0)
+        box_w = float(r.get("Box_W_Norm") or r.get("box_w") or 0.0)
+        box_h = float(r.get("Box_H_Norm") or r.get("box_h") or 0.0)
+
         return APRSSample(
-            id=r.get("id", f"{self.split}_{i}"), split=self.split,
-            filename=r.get("filename", r.get("id", f"{self.split}_{i}")),
-            instruction=r.get("instruction", ""),
-            instruction_zh=r.get("instruction_zh", ""),
-            category=r.get("category", ""),
-            img_w=int(r.get("width", 0) or 0), img_h=int(r.get("height", 0) or 0),
-            init_theta=float(r.get("init_theta", 0.0)),
-            init_phi=float(r.get("init_phi", 0.0)),
-            target_theta=float(r.get("target_theta", 0.0)),
-            target_phi=float(r.get("target_phi", 0.0)),
-            box_norm=(float(r.get("box_x", 0.0)), float(r.get("box_y", 0.0)),
-                      float(r.get("box_w", 0.0)), float(r.get("box_h", 0.0))),
+            id=r.get("id", f"{self.split}_{i}"),
+            split=self.split,
+            filename=filename,
+            instruction=instruction,
+            instruction_zh=instruction_zh,
+            category=category,
+            img_w=img_w,
+            img_h=img_h,
+            init_theta=init_theta,
+            init_phi=init_phi,
+            target_theta=target_theta,
+            target_phi=target_phi,
+            box_norm=(box_x, box_y, box_w, box_h),
             _image=img,
         )
 
