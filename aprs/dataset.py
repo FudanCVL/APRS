@@ -168,15 +168,21 @@ class APRSDataset:
 
     @classmethod
     def from_hub(cls, repo_id: str = "FudanCVL/APRS_dataset",
-                 split: str = "train") -> "APRSDataset":
-        from datasets import load_dataset
-        # Load from HuggingFace Hub - the parquet files are in data/ directory
-        hf = load_dataset(
-            repo_id,
-            data_files={split: f"data/{split}.parquet"},
-            split=split
+                 split: str = "train", cache_dir: Optional[str] = None) -> "APRSDataset":
+        from huggingface_hub import snapshot_download
+        import tempfile
+
+        # Download entire dataset (including images) from HuggingFace Hub
+        print(f"Downloading dataset from {repo_id}...")
+        local_dir = snapshot_download(
+            repo_id=repo_id,
+            repo_type="dataset",
+            cache_dir=cache_dir,
+            allow_patterns=[f"data/{split}.parquet", f"{split}/*"],
         )
-        return cls._from_hf(hf, split)
+
+        # Load as local dataset
+        return cls(root=local_dir, split=split)
 
     @classmethod
     def _from_hf(cls, hf, split: str) -> "APRSDataset":
