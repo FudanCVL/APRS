@@ -62,7 +62,7 @@ class GLViewer(QOpenGLWidget):
         self._update_projection()
 
     def _load_texture(self, path):
-        if not path:
+        if path is None:
             print("No panorama path provided")
             return
         try:
@@ -76,7 +76,7 @@ class GLViewer(QOpenGLWidget):
                     img = Image.fromarray(path).convert("RGBA").transpose(Image.FLIP_LEFT_RIGHT)
             elif isinstance(path, Image.Image):
                 img = path.convert("RGBA").transpose(Image.FLIP_LEFT_RIGHT)
-            elif os.path.exists(path):
+            elif isinstance(path, str) and os.path.exists(path):
                 img = Image.open(path).convert("RGBA").transpose(Image.FLIP_LEFT_RIGHT)
             else:
                 print(f"Panorama not found: {path}")
