@@ -168,9 +168,13 @@ class APRSDataset:
 
     @classmethod
     def from_hub(cls, repo_id: str = "FudanCVL/APRS_dataset",
-                 split: str = "train", cache_dir: Optional[str] = None) -> "APRSDataset":
+                 split: str = "train", cache_dir: Optional[str] = None,
+                 token: Optional[str] = None) -> "APRSDataset":
         from huggingface_hub import snapshot_download
-        import tempfile
+        import os
+
+        # Use token from parameter or environment variable
+        hf_token = token or os.environ.get("HF_TOKEN")
 
         # Download entire dataset (including images) from HuggingFace Hub
         print(f"Downloading dataset from {repo_id}...")
@@ -178,6 +182,7 @@ class APRSDataset:
             repo_id=repo_id,
             repo_type="dataset",
             cache_dir=cache_dir,
+            token=hf_token,
             allow_patterns=[f"data/{split}.parquet", f"{split}/*"],
         )
 
