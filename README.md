@@ -78,11 +78,67 @@ Explicit spatial-visual memory that progressively maps sequential observations i
 ## 📦 Installation
 
 ### Requirements
-- Python >= 3.8
-- PyTorch >= 2.0 (for SAM-3 segmentation)
+- Python >= 3.11, < 3.13
+- PyTorch 2.9.0 (for SAM-3 segmentation)
 - CUDA (recommended for GPU acceleration)
 
-### Basic Setup
+### Install uv
+
+[uv](https://github.com/astral-sh/uv) is a fast Python package installer and resolver, written in Rust.
+
+```bash
+# On macOS and Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# On Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# With pip
+pip install uv
+```
+
+### Setup with uv (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/FudanCVL/APRS.git
+cd APRS
+
+# Create virtual environment with Python 3.11
+uv venv --python 3.11
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install core dependencies
+uv pip install -e .
+```
+
+**Optional Components:**
+
+```bash
+# Install SAM-3 for segmentation (includes PyTorch 2.9.0, torchvision, timm, einops, scipy, scikit-image)
+uv pip install -e ".[sam3]"
+
+# Install 360° viewer (includes PyQt5, PyOpenGL)
+uv pip install -e ".[viewer]"
+
+# Install vLLM for inference acceleration (includes vllm>=0.11.0, transformers, accelerate, qwen-vl-utils)
+uv pip install -e ".[vllm]"
+
+# Install development tools (pytest, black, ruff, mypy)
+uv pip install -e ".[dev]"
+
+# Install all optional dependencies
+uv pip install -e ".[all]"
+```
+
+**Quick Start - Install Everything:**
+
+```bash
+# One command to install all components
+uv pip install -e ".[all]"
+```
+
+### Setup with pip
 
 ```bash
 # Clone the repository
@@ -92,11 +148,12 @@ cd APRS
 # Install core dependencies
 pip install -e .
 
-# Optional: Install SAM-3 for segmentation
-pip install -e ".[sam3]"
-
-# Optional: Install 360° viewer
-pip install -e ".[viewer]"
+# Optional: Install with specific components
+pip install -e ".[sam3]"       # SAM-3 segmentation
+pip install -e ".[viewer]"     # 360° viewer
+pip install -e ".[vllm]"       # vLLM inference
+pip install -e ".[dev]"        # Development tools
+pip install -e ".[all]"        # All components
 ```
 
 ---
