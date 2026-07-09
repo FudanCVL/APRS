@@ -64,14 +64,13 @@ class EgoSphere:
         self.explored = np.zeros((h, w), dtype=bool)
         self._theta_anchor = init_theta
         self.trajectory: List[Tuple[float, float]] = []
-        self._first_update = True  # Flag to set anchor on first update
+        self._first_update = True
 
     def _to_relative(self, theta_abs: float) -> float:
         return normalize_theta(theta_abs - self._theta_anchor)
 
 
     def update(self, view: np.ndarray, theta_abs: float, phi: float) -> None:
-        # On first update, set anchor to current theta so first frame is at canvas center (0°)
         if self._first_update:
             self._theta_anchor = theta_abs
             self._first_update = False
