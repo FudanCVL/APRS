@@ -217,7 +217,7 @@ If you find this work helpful, please consider citing:
   title={Seek to Segment: Active Perception for Panoramic Referring Segmentation},
   author={Tang, Song and Hu, Shuming and Shuai, Xincheng and Ding, Henghui and Jiang, Yu-Gang},
   journal={arXiv preprint arXiv:2607.02497},
-  year={2025}
+  year={2026}
 }
 ```
 
